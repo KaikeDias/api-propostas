@@ -31,6 +31,7 @@ public class ProposalRequestDTO {
                 .requestedValue(dto.getRequestedValue())
                 .paymentTerm(dto.getPaymentTerm())
                 .user(user)
+                .integrated(true)
                 .build();
     }
 }

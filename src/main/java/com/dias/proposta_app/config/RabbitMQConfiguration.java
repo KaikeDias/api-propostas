@@ -3,6 +3,10 @@ package com.dias.proposta_app.config;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -10,6 +14,9 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitMQConfiguration {
+
+    @Value("${rabbitmq.pending-proposal.exchange}")
+    private String exchange;
 
     @Bean
     public Queue createQueuePendingProposalMsCreditAnalasys() {
@@ -32,11 +39,6 @@ public class RabbitMQConfiguration {
     }
 
 
-    private final ConnectionFactory connectionFactory;
-
-    public RabbitMQConfiguration(ConnectionFactory connectionFactory) {
-        this.connectionFactory = connectionFactory;
-    }
 
     @Bean
     public RabbitAdmin createRabbitAdmin(ConnectionFactory connectionFactory) {
@@ -50,7 +52,7 @@ public class RabbitMQConfiguration {
 
     @Bean
     public FanoutExchange createFanoutExchangePendingProposal() {
-        return ExchangeBuilder.fanoutExchange("pending-proposal.ex").build();
+        return ExchangeBuilder.fanoutExchange(exchange).build();
     }
 
     @Bean
@@ -63,4 +65,17 @@ public class RabbitMQConfiguration {
         return BindingBuilder.bind(createQueuePendingProposalMsNotification()).to(createFanoutExchangePendingProposal());
     }
 
+    @Bean
+    public MessageConverter jacksonJsonMessageConverter() {
+        return new JacksonJsonMessageConverter();
+    }
+
+    @Bean
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
+        RabbitTemplate rabbitTemplate = new RabbitTemplate();
+        rabbitTemplate.setConnectionFactory(connectionFactory);
+        rabbitTemplate.setMessageConverter(jacksonJsonMessageConverter());
+
+        return rabbitTemplate;
+    }
 }
