@@ -1,7 +1,6 @@
 package com.dias.proposta_app.config;
 
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.QueueBuilder;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -47,6 +46,21 @@ public class RabbitMQConfiguration {
     @Bean
     public ApplicationListener<ApplicationReadyEvent> initializeAdmin(RabbitAdmin rabbitAdmin) {
         return event -> rabbitAdmin.initialize();
+    }
+
+    @Bean
+    public FanoutExchange createFanoutExchangePendingProposal() {
+        return ExchangeBuilder.fanoutExchange("pending-proposal.ex").build();
+    }
+
+    @Bean
+    public Binding createBindingPendingProposalCreditAnalysis() {
+        return BindingBuilder.bind(createQueuePendingProposalMsCreditAnalasys()).to(createFanoutExchangePendingProposal());
+    }
+
+    @Bean
+    public Binding createBindingPendingProposalNotifications() {
+        return BindingBuilder.bind(createQueuePendingProposalMsNotification()).to(createFanoutExchangePendingProposal());
     }
 
 }
